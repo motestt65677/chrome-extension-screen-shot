@@ -1,3 +1,8 @@
+var startX;
+var startY;
+var croppedImageWidth;
+var croppedImageHeight;
+
 document.body.innerHTML = document.body.innerHTML + `<div id="screenshot-screen-shot" class="container-screen-shot" @mousemove="move" @mousedown="mouseDown" @mouseup="mouseUp">
         
         <transition name="screenshot-screen-shot">
@@ -7,7 +12,9 @@ document.body.innerHTML = document.body.innerHTML + `<div id="screenshot-screen-
         <div class="crosshairs-screen-shot" :class="{ 'hidden' : isDragging }" :style="{ left: crossHairsLeft + 'px', top: crossHairsTop + 'px' }"></div>
         <div class="borderedBox-screen-shot" :class="{ 'hidden': !isDragging }" :style="{ left: boxLeft + 'px', top: boxTop + 'px', width: boxEndWidth + 'px', height: boxEndHeight + 'px' }"></div>
         <span class="tooltip-screen-shot" :class="{ 'hidden': !isDragging }" :style="{ left: toolTipLeft + 'px', top: toolTipTop + 'px'}">{{boxEndWidth}} x {{boxEndHeight}}px</span>
-        </div>`;
+        </div>
+        <canvas id="thisCanvas" style="z-index:999;"></canvas>
+        `;
 
 var crosshairs,
     overlay,
@@ -216,6 +223,12 @@ var screenshot = new Vue({
             
             this.isDragging = false;
             this.mouseIsDown = false;
+            // chrome.runtime.sendMessage({"message": "screen-capture"});
+            // sendMessage(test);
+            startX = this.startX;
+            startY = this.startY;
+            croppedImageWidth = this.boxEndWidth;
+            croppedImageHeight = this.boxEndHeight;
         }
         
     }
@@ -223,11 +236,45 @@ var screenshot = new Vue({
 
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
-      if( request.message === "clicked_browser_action" ) {
-        
-        document.getElementById('screenshot-screen-shot').style.display = "inline";
-        
-        
-      }
+        if( request.message === "clicked_browser_action" ) {
+            
+            // document.getElementById('screenshot-screen-shot').style.display = "inline";
+            chrome.runtime.sendMessage({"message": "screen-capture"});
+            
+        } else if (request.message === "clicked_send_coord") {
+            // console.log(startX);
+            // console.log(croppedImageWidth);
+            chrome.runtime.sendMessage({
+                "message": "clicked_send_coord", 
+                "startX": startX, 
+                "startY": startY,
+                "croppedImageWidth": croppedImageWidth,
+                "croppedImageHeight": croppedImageHeight
+            });
+        } else if (request.message === "update_container"){
+            chrome.runtime.sendMessage({
+                "message": "update_container"
+            });
+            // var image = new Image(),
+            //     canvas = document.getElementById('thisCanvas'),
+            //     ctx = canvas.getContext('2d');
+
+            // image.src = request.image;
+
+            // image.onload = function(){
+            //     ctx.drawImage(image,
+            //         request.startX, request.startY,   // Start at 70/20 pixels from the left and the top of the image (crop),
+            //         request.croppedImageWidth, request.croppedImageHeight,   // "Get" a `50 * 50` (w * h) area from the source image (crop),
+            //         0, 0,     // Place the result at 0, 0 in the canvas,
+            //         100, 100); // With as width / height: 100 * 100 (scale)
+            // }
+            // document.body.appendChild(image);
+            // var link = document.createElement('a');
+            // link.download = 'filename.jpeg';
+            // link.href = document.getElementById('thisCanvas').toDataURL()
+            // link.click();
+        }
+
     }
 );
+
