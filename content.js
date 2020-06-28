@@ -1,29 +1,34 @@
+
 var startX;
 var startY;
 var croppedImageWidth;
 var croppedImageHeight;
-
-document.body.innerHTML = document.body.innerHTML + `<div id="screenshot-screen-shot" class="container-screen-shot" @mousemove="move" @mousedown="mouseDown" @mouseup="mouseUp">
+if(document.getElementById('screenshot-screen-shot') == null){
+    document.body.innerHTML = document.body.innerHTML + `<div id="screenshot-screen-shot" style="display:none;" class="container-screen-shot" @mousemove="move" @mousedown="mouseDown" @mouseup="mouseUp">
         
-        <transition name="screenshot-screen-shot">
-            <div class="Flash" v-if="tookScreenShot"></div>
-        </transition>
-        <div class="overlay-screen-shot" :class="{ 'highlighting' : mouseIsDown }" :style="{ borderWidth: borderWidth }"></div>
-        <div class="crosshairs-screen-shot" :class="{ 'hidden' : isDragging }" :style="{ left: crossHairsLeft + 'px', top: crossHairsTop + 'px' }"></div>
-        <div class="borderedBox-screen-shot" :class="{ 'hidden': !isDragging }" :style="{ left: boxLeft + 'px', top: boxTop + 'px', width: boxEndWidth + 'px', height: boxEndHeight + 'px' }"></div>
-        <span class="tooltip-screen-shot" :class="{ 'hidden': !isDragging }" :style="{ left: toolTipLeft + 'px', top: toolTipTop + 'px'}">{{boxEndWidth}} x {{boxEndHeight}}px</span>
-        </div>
-        <canvas id="thisCanvas" style="z-index:999;"></canvas>
-        `;
-
-var crosshairs,
+    <transition name="screenshot-screen-shot">
+        <div class="Flash" v-if="tookScreenShot"></div>
+    </transition>
+    <div class="overlay-screen-shot" :class="{ 'highlighting' : mouseIsDown }" :style="{ borderWidth: borderWidth }"></div>
+    <div class="crosshairs-screen-shot" :class="{ 'hidden' : isDragging }" :style="{ left: crossHairsLeft + 'px', top: crossHairsTop + 'px' }"></div>
+    <div class="borderedBox-screen-shot" :class="{ 'hidden': !isDragging }" :style="{ left: boxLeft + 'px', top: boxTop + 'px', width: boxEndWidth + 'px', height: boxEndHeight + 'px' }"></div>
+    <span class="tooltip-screen-shot" :class="{ 'hidden': !isDragging }" :style="{ left: toolTipLeft + 'px', top: toolTipTop + 'px'}">{{boxEndWidth}} x {{boxEndHeight}}px</span>
+    </div>
+    <canvas id="thisCanvas" style="z-index:999;"></canvas>
+    `;
+    var crosshairs,
     overlay,
     tooltip;
 
-var TOOLTIP_MARGIN = +window.getComputedStyle(document.querySelector(".tooltip-screen-shot")).margin.split("px")[0];
+    var doc = document.documentElement;
+    var left = (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
+    var top = (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
 
-var screenshot = new Vue({
-    
+
+    var TOOLTIP_MARGIN = +window.getComputedStyle(document.querySelector(".tooltip-screen-shot")).margin.split("px")[0];
+
+    var screenshot = new Vue({
+
     el: "#screenshot-screen-shot",
 
     data: {
@@ -82,10 +87,10 @@ var screenshot = new Vue({
 
     methods: {
         move: function (e) {
-        
-            this.crossHairsTop = e.clientY;
-            this.crossHairsLeft = e.clientX;
-            
+            this.offsetTop = (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
+            this.offsetLeft = (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
+            this.crossHairsTop = e.clientY + this.offsetTop;
+            this.crossHairsLeft = e.clientX + this.offsetLeft;
             var tooltipBoundingRect = tooltip.getBoundingClientRect();
             
             this.toolTipWidth = tooltipBoundingRect.width;
@@ -116,8 +121,8 @@ var screenshot = new Vue({
                 this.boxEndWidth = endX - startX;
                 this.boxEndHeight = endY - startY;
                 
-                this.toolTipLeft = endX;
-                this.toolTipTop = endY;
+                this.toolTipLeft = endX + this.offsetLeft;
+                this.toolTipTop = endY + this.offsetTop;
                 
                 if (endX + this.toolTipWidth >= windowWidth) {
                     this.toolTipLeft = windowWidth - this.toolTipWidth - (TOOLTIP_MARGIN * 2);
@@ -138,8 +143,8 @@ var screenshot = new Vue({
                 this.boxEndWidth = startX - endX;
                 this.boxEndHeight = endY - startY;
                 
-                this.toolTipLeft = endX - this.toolTipWidth;
-                this.toolTipTop = endY;
+                this.toolTipLeft = endX - this.toolTipWidth + + this.offsetLeft;
+                this.toolTipTop = endY + this.offsetTop;
                 
                 if (endX - this.toolTipWidth <= 0) {
                     this.toolTipLeft = TOOLTIP_MARGIN;
@@ -158,8 +163,8 @@ var screenshot = new Vue({
                 this.boxEndWidth = endX - startX;
                 this.boxEndHeight = startY - endY;
                 
-                this.toolTipLeft = endX;
-                this.toolTipTop = endY - this.toolTipHeight;
+                this.toolTipLeft = endX + this.offsetLeft;
+                this.toolTipTop = endY - this.toolTipHeight + this.offsetTop;
                 
                 this.borderWidth = endY + "px " + (windowWidth - endX) + "px " + (windowHeight - startY) + "px " + startX + "px";
                 
@@ -182,8 +187,8 @@ var screenshot = new Vue({
                 
                 this.borderWidth = endY + "px " + (windowWidth - startX) + "px " + (windowHeight - startY) + "px " + endX + "px";
                 
-                this.toolTipLeft = endX - this.toolTipWidth;
-                this.toolTipTop = endY - this.toolTipHeight;
+                this.toolTipLeft = endX - this.toolTipWidth + this.offsetLeft;
+                this.toolTipTop = endY - this.toolTipHeight + this.offsetTop;
                 
                 if (endX - this.toolTipWidth <= 0) {
                     this.toolTipLeft = TOOLTIP_MARGIN;
@@ -218,13 +223,13 @@ var screenshot = new Vue({
             
             if (this.isDragging) {
                 // Don't take the screenshot unless the mouse moved somehow.
-                this.tookScreenShot = true;
+                // this.tookScreenShot = true;
             }
             
             this.isDragging = false;
             this.mouseIsDown = false;
-            // chrome.runtime.sendMessage({"message": "screen-capture"});
-            // sendMessage(test);
+            // // chrome.runtime.sendMessage({"message": "screen-capture"});
+            // // sendMessage(test);
             startX = this.startX;
             startY = this.startY;
             croppedImageWidth = this.boxEndWidth;
@@ -232,47 +237,28 @@ var screenshot = new Vue({
         }
         
     }
-});
+    });
+}
+
 
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
-        if( request.message === "clicked_browser_action" ) {
-            
-            // document.getElementById('screenshot-screen-shot').style.display = "inline";
-            chrome.runtime.sendMessage({"message": "screen-capture"});
-            
-        } else if (request.message === "clicked_send_coord") {
+        if(request.message === "clicked_send_coord") {
             // console.log(startX);
             // console.log(croppedImageWidth);
             chrome.runtime.sendMessage({
-                "message": "clicked_send_coord", 
+                "message": "clicked_send_coord_to_background", 
                 "startX": startX, 
                 "startY": startY,
                 "croppedImageWidth": croppedImageWidth,
                 "croppedImageHeight": croppedImageHeight
             });
-        } else if (request.message === "update_container"){
-            chrome.runtime.sendMessage({
-                "message": "update_container"
-            });
-            // var image = new Image(),
-            //     canvas = document.getElementById('thisCanvas'),
-            //     ctx = canvas.getContext('2d');
-
-            // image.src = request.image;
-
-            // image.onload = function(){
-            //     ctx.drawImage(image,
-            //         request.startX, request.startY,   // Start at 70/20 pixels from the left and the top of the image (crop),
-            //         request.croppedImageWidth, request.croppedImageHeight,   // "Get" a `50 * 50` (w * h) area from the source image (crop),
-            //         0, 0,     // Place the result at 0, 0 in the canvas,
-            //         100, 100); // With as width / height: 100 * 100 (scale)
-            // }
-            // document.body.appendChild(image);
-            // var link = document.createElement('a');
-            // link.download = 'filename.jpeg';
-            // link.href = document.getElementById('thisCanvas').toDataURL()
-            // link.click();
+        } else if (request.message === "start_issue"){
+            var container = document.getElementById('screenshot-screen-shot');
+            container.setAttribute('style', 'display:inline;');
+        } else if (request.message === "stop_issue"){
+            var container = document.getElementById('screenshot-screen-shot');
+            container.setAttribute('style', 'display:none;');
         }
 
     }

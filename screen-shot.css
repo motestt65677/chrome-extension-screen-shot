@@ -16,6 +16,8 @@ html, body {
 .tooltip-screen-shot,
 .borderedBox {
   user-select: none;
+  z-index: 2147483645;
+
 }
 
 .overlay-screen-shot {
@@ -52,7 +54,7 @@ html, body {
   width: 100%;
   position: absolute;
   border: none !important;
-  border-image:  !important;
+  /* border-image:  !important; */
 }
 
 .crosshairs-screen-shot::before {

@@ -1,15 +1,22 @@
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     var activeTab = tabs[0];
-    chrome.tabs.sendMessage(activeTab.id, {"message": "update_container"});
+    chrome.runtime.sendMessage({"message": "update_container_get_items"});
 });
 
 
-let changeColor = document.getElementById('button');
-changeColor.onclick = function(element) {
-  let color = element.target.value;
+let startBtn = document.getElementById('start_btn');
+startBtn.onclick = function(element) {
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     var activeTab = tabs[0];
-    chrome.tabs.sendMessage(activeTab.id, {"message": "clicked_browser_action"});
+    chrome.tabs.sendMessage(activeTab.id, {"message": "start_issue"});
+  });
+};
+
+let stopBtn = document.getElementById('stop_btn');
+stopBtn.onclick = function(element) {
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    var activeTab = tabs[0];
+    chrome.tabs.sendMessage(activeTab.id, {"message": "stop_issue"});
   });
 };
 
@@ -23,6 +30,8 @@ sendCoord.onclick = function(element) {
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
         if (request.message === "update_container") {
+            if(request.items.length == 0)
+                return;
             //  To do something
             let itemsContainer = document.getElementById('itemsContainer');
             if(request.items.length > 0)
@@ -33,9 +42,7 @@ chrome.runtime.onMessage.addListener(
                 thisImage.src = thisItem["image"];
                 thisImage.width = 100;
                 thisImage.height = 100;
-                console.log(thisImage);
                 itemsContainer.appendChild(thisImage);
-                console.log("qq");
             }
         }
     }
